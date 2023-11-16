@@ -33,7 +33,7 @@ class FutureArray implements FutureArrayInterface
         return count($this->_value);
     }
 
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
         return new \ArrayIterator($this->_value);
     }
