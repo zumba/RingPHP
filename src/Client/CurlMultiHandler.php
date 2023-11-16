@@ -25,6 +25,7 @@ class CurlMultiHandler
     private $handles = [];
     private $delays = [];
     private $maxHandles;
+    private $_mh;
 
     /**
      * This handler accepts the following options:
