@@ -36,8 +36,8 @@ jobs:
 
       - run: vendor/bin/phpunit 2>&1 | tee phpunit.log
 
-      - name: Fail on deprecations raised in src or tests
+      - name: Fail on deprecations from src, tests or react/promise, or unhandled promise rejections
         run: |
-          if grep -E "Deprecated: .* in ${GITHUB_WORKSPACE}/(src|tests)/" phpunit.log; then
+          if grep -E "Deprecated: .* in ${GITHUB_WORKSPACE}/(src|tests|vendor/react/promise)/|Unhandled promise rejection" phpunit.log; then
             exit 1
           fi
