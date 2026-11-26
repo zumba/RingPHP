@@ -92,5 +92,6 @@ class CurlHandlerTest extends \PHPUnit\Framework\TestCase
         ];
         $a($request);
         $a($request);
+        $this->assertCount(1, (fn () => $this->handles)->call($a));
     }
 }

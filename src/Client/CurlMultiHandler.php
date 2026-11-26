@@ -174,7 +174,6 @@ class CurlMultiHandler
                 $this->_mh,
                 $this->handles[$id]['handle']
             );
-            curl_close($this->handles[$id]['handle']);
             unset($this->handles[$id], $this->delays[$id]);
         }
     }
@@ -196,7 +195,6 @@ class CurlMultiHandler
         $handle = $this->handles[$id]['handle'];
         unset($this->delays[$id], $this->handles[$id]);
         curl_multi_remove_handle($this->_mh, $handle);
-        curl_close($handle);
 
         return true;
     }

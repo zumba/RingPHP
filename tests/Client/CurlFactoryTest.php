@@ -66,7 +66,6 @@ class CurlFactoryTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\CurlHandle::class, $result[0]);
         $this->assertIsArray($result[1]);
         $this->assertSame($stream, $result[2]);
-        curl_close($result[0]);
 
         $this->assertEquals('PUT', $_SERVER['_curl'][CURLOPT_CUSTOMREQUEST]);
         $this->assertEquals(
