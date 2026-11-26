@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - '8.2'
+          - '8.5'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl
+          ini-values: error_reporting=-1, display_errors=On
+          coverage: none
+
+      - run: composer install --no-interaction --no-progress
+
+      - run: vendor/bin/phpunit 2>&1 | tee phpunit.log
+
+      - name: Fail on deprecations raised in src or tests
+        run: |
+          if grep -E "Deprecated: .* in ${GITHUB_WORKSPACE}/(src|tests)/" phpunit.log; then
+            exit 1
+          fi
