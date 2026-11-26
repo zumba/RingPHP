@@ -490,13 +490,8 @@ class CurlFactory
 
                 $options[CURLOPT_NOPROGRESS] = false;
                 $options[CURLOPT_PROGRESSFUNCTION] =
-                    function () use ($value) {
-                        $args = func_get_args();
-                        // PHP 5.5 pushed the handle onto the start of the args
-                        if (is_resource($args[0])) {
-                            array_shift($args);
-                        }
-                        call_user_func_array($value, $args);
+                    function ($handle, ...$progress) use ($value) {
+                        call_user_func_array($value, $progress);
                     };
                 break;
 
