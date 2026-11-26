@@ -5,7 +5,7 @@ use GuzzleHttp\Ring\Client\MockHandler;
 use GuzzleHttp\Ring\Future\FutureArray;
 use React\Promise\Deferred;
 
-class MockHandlerTest extends \PHPUnit_Framework_TestCase
+class MockHandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testReturnsArray()
     {
@@ -74,12 +74,10 @@ class MockHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($c);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Response must be an array or FutureArrayInterface. Found
-     */
     public function testEnsuresMockIsValid()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Response must be an array or FutureArrayInterface. Found');
         $mock = new MockHandler('foo');
         $mock([]);
     }

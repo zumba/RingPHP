@@ -3,7 +3,7 @@ namespace GuzzleHttp\Tests\Ring\Future;
 
 use GuzzleHttp\Ring\Future\CompletedFutureArray;
 
-class CompletedFutureArrayTest extends \PHPUnit_Framework_TestCase
+class CompletedFutureArrayTest extends \PHPUnit\Framework\TestCase
 {
     public function testReturnsAsArray()
     {

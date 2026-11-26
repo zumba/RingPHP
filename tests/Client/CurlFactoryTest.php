@@ -21,15 +21,15 @@ use GuzzleHttp\Stream\FnStream;
 use GuzzleHttp\Stream\NoSeekStream;
 use GuzzleHttp\Stream\Stream;
 
-class CurlFactoryTest extends \PHPUnit_Framework_TestCase
+class CurlFactoryTest extends \PHPUnit\Framework\TestCase
 {
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $_SERVER['curl_test'] = true;
         unset($_SERVER['_curl']);
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         unset($_SERVER['_curl'], $_SERVER['curl_test']);
     }
@@ -61,10 +61,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
 
         $f = new CurlFactory();
         $result = $f($request);
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertCount(3, $result);
-        $this->assertInternalType('resource', $result[0]);
-        $this->assertInternalType('array', $result[1]);
+        $this->assertInstanceOf(\CurlHandle::class, $result[0]);
+        $this->assertIsArray($result[1]);
         $this->assertSame($stream, $result[2]);
         curl_close($result[0]);
 
@@ -125,12 +125,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(10, $_SERVER['_curl'][CURLOPT_LOW_SPEED_LIMIT]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage SSL CA bundle not found: /does/not/exist
-     */
     public function testValidatesVerify()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('SSL CA bundle not found: /does/not/exist');
         $f = new CurlFactory();
         $f([
             'http_method' => 'GET',
@@ -202,12 +200,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('http://bar.com', $_SERVER['_curl'][CURLOPT_PROXY]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage SSL private key not found: /does/not/exist
-     */
     public function testValidatesSslKey()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('SSL private key not found: /does/not/exist');
         $f = new CurlFactory();
         $f([
             'http_method' => 'GET',
@@ -239,12 +235,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('test', $_SERVER['_curl'][CURLOPT_SSLKEYPASSWD]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage SSL certificate not found: /does/not/exist
-     */
     public function testValidatesCert()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('SSL certificate not found: /does/not/exist');
         $f = new CurlFactory();
         $f([
             'http_method' => 'GET',
@@ -276,12 +270,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('test', $_SERVER['_curl'][CURLOPT_SSLCERTPASSWD]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage progress client option must be callable
-     */
     public function testValidatesProgress()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('progress client option must be callable');
         $f = new CurlFactory();
         $f([
             'http_method' => 'GET',
@@ -304,11 +296,11 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $response->wait();
         rewind($res);
         $output = str_replace("\r", '', stream_get_contents($res));
-        $this->assertContains(
+        $this->assertStringContainsString(
             "> HEAD / HTTP/1.1\nhost: 127.0.0.1:8125\n\n",
             $output
         );
-        $this->assertContains("< HTTP/1.1 200", $output);
+        $this->assertStringContainsString("< HTTP/1.1 200", $output);
         fclose($res);
     }
 
@@ -417,11 +409,9 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(CURL_HTTP_VERSION_1_0, $_SERVER['_curl'][CURLOPT_HTTP_VERSION]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testValidatesSaveTo()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $handler = new CurlMultiHandler();
         $handler([
             'http_method' => 'GET',
@@ -483,11 +473,9 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         unlink($tmpfile);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testValidatesBody()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $handler = new CurlMultiHandler();
         $handler([
             'http_method' => 'GET',
@@ -628,7 +616,7 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
     {
         $res = CurlFactory::createResponse(function () {}, [], [], [], null);
         $this->assertInstanceOf('GuzzleHttp\Ring\Exception\RingException', $res['error']);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'No response was received for a request with no body',
             $res['error']->getMessage()
         );
@@ -640,7 +628,7 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
             'body' => new NoSeekStream(Stream::factory('foo'))
         ], [], [], null);
         $this->assertInstanceOf('GuzzleHttp\Ring\Exception\RingException', $res['error']);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'rewind the request body failed',
             $res['error']->getMessage()
         );
@@ -679,7 +667,7 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals(3, $call);
         $this->assertArrayHasKey('error', $response);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'The cURL request was retried 3 times',
             $response['error']->getMessage()
         );
@@ -801,12 +789,10 @@ class CurlFactoryTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage Directory /path/to/does/not does not exist for save_to value of /path/to/does/not/exist.txt
-     */
     public function testThrowsWhenDirNotFound()
     {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Directory /path/to/does/not does not exist for save_to value of /path/to/does/not/exist.txt');
         $request = [
             'http_method' => 'GET',
             'headers' => ['host' => [Server::$url]],

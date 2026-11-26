@@ -5,7 +5,7 @@ use GuzzleHttp\Ring\Client\ClientUtils;
 use GuzzleHttp\Ring\Core;
 use GuzzleHttp\Ring\Client\StreamHandler;
 
-class StreamHandlerTest extends \PHPUnit_Framework_TestCase
+class StreamHandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testReturnsResponseForSuccessfulRequest()
     {
@@ -63,7 +63,7 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
             'url'         => 'ftp://localhost:123',
         ]);
         $this->assertArrayHasKey('error', $result);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'URL is invalid: ftp://localhost:123',
             $result['error']->getMessage()
         );
@@ -250,7 +250,7 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
     public function testVerifiesVerifyIsValidIfPath()
     {
         $res = $this->getSendResult(['verify' => '/does/not/exist']);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'SSL CA bundle not found: /does/not/exist',
             (string) $res['error']
         );
@@ -265,7 +265,7 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
     public function testVerifiesCertIfValidPath()
     {
         $res = $this->getSendResult(['cert' => '/does/not/exist']);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'SSL certificate not found: /does/not/exist',
             (string) $res['error']
         );
@@ -296,7 +296,7 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
     public function testEnsuresVerifyOptionIsValid()
     {
         $res = $this->getSendResult(['verify' => 10]);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Invalid verify request option',
             (string) $res['error']
         );
@@ -318,9 +318,9 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
         $this->getSendResult(['debug' => $f]);
         fseek($f, 0);
         $contents = stream_get_contents($f);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [CONNECT]', $contents);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [FILE_SIZE_IS]', $contents);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [PROGRESS]', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [CONNECT]', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [FILE_SIZE_IS]', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [PROGRESS]', $contents);
     }
 
     public function testDebugAttributeWritesStreamInfoToBuffer()
@@ -334,9 +334,9 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
         ]);
         fseek($buffer, 0);
         $contents = stream_get_contents($buffer);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [CONNECT]', $contents);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [FILE_SIZE_IS] message: "Content-Length: 8"', $contents);
-        $this->assertContains('<GET http://127.0.0.1:8125/> [PROGRESS] bytes_max: "8"', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [CONNECT]', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [FILE_SIZE_IS] message: "Content-Length: 8"', $contents);
+        $this->assertStringContainsString('<GET http://127.0.0.1:8125/> [PROGRESS] bytes_max: "8"', $contents);
         $this->assertTrue($called);
     }
 
@@ -408,7 +408,7 @@ class StreamHandlerTest extends \PHPUnit_Framework_TestCase
     public function testEnsuresThatStreamContextIsAnArray()
     {
         $res = $this->getSendResult(['stream_context' => 'foo']);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'stream_context must be an array',
             (string) $res['error']
         );

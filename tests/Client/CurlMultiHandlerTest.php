@@ -3,7 +3,7 @@ namespace GuzzleHttp\Tests\Ring\Client;
 
 use GuzzleHttp\Ring\Client\CurlMultiHandler;
 
-class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
+class CurlMultiHandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testSendsRequest()
     {
@@ -38,7 +38,7 @@ class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($response['reason']);
         $this->assertEquals([], $response['headers']);
         $this->assertArrayHasKey('error', $response);
-        $this->assertContains('cURL error ', $response['error']->getMessage());
+        $this->assertStringContainsString('cURL error ', $response['error']->getMessage());
         $this->assertArrayHasKey('transfer_stats', $response);
         $this->assertEquals(
             trim($url, '/'),
@@ -67,13 +67,13 @@ class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
     public function testCanSetMaxHandles()
     {
         $a = new CurlMultiHandler(['max_handles' => 2]);
-        $this->assertEquals(2, $this->readAttribute($a, 'maxHandles'));
+        $this->assertEquals(2, (fn () => $this->maxHandles)->call($a));
     }
 
     public function testCanSetSelectTimeout()
     {
         $a = new CurlMultiHandler(['select_timeout' => 2]);
-        $this->assertEquals(2, $this->readAttribute($a, 'selectTimeout'));
+        $this->assertEquals(2, (fn () => $this->selectTimeout)->call($a));
     }
 
     public function testSendsFuturesWhenMaxHandlesIsReached()
@@ -116,7 +116,7 @@ class CurlMultiHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(0, Server::received());
 
         foreach ($responses as $response) {
-            $this->assertTrue($this->readAttribute($response, 'isRealized'));
+            $this->assertTrue((fn () => $this->isRealized)->call($response));
         }
     }
 

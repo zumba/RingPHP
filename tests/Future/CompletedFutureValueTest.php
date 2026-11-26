@@ -4,7 +4,7 @@ namespace GuzzleHttp\Tests\Ring\Future;
 use GuzzleHttp\Ring\Exception\CancelledFutureAccessException;
 use GuzzleHttp\Ring\Future\CompletedFutureValue;
 
-class CompletedFutureValueTest extends \PHPUnit_Framework_TestCase
+class CompletedFutureValueTest extends \PHPUnit\Framework\TestCase
 {
     public function testReturnsValue()
     {
