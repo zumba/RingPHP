@@ -34,10 +34,23 @@ jobs:
 
       - run: composer install --no-interaction --no-progress
 
+      - name: Start the node test server
+        run: |
+          node tests/Client/server.js 8125 >> /tmp/server.log 2>&1 &
+          for _ in $(seq 60); do
+            curl -s -o /dev/null http://127.0.0.1:8125/guzzle-server/perf && exit 0
+            sleep 0.5
+          done
+          exit 1
+
       - run: vendor/bin/phpunit 2>&1 | tee phpunit.log
 
-      - name: Fail on deprecations raised in src or tests
+      - name: Fail on deprecations from src, tests or react/promise, or unhandled promise rejections
         run: |
-          if grep -E "Deprecated: .* in ${GITHUB_WORKSPACE}/(src|tests)/" phpunit.log; then
+          if grep -E "Deprecated: .* in ${GITHUB_WORKSPACE}/(src|tests|vendor/react/promise)/|Unhandled promise rejection" phpunit.log; then
             exit 1
           fi
+
+      - name: Show the node test server log
+        if: failure()
+        run: cat /tmp/server.log || true

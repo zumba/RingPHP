@@ -2,7 +2,6 @@
 namespace GuzzleHttp\Ring\Future;
 
 use React\Promise\PromiseInterface;
-use React\Promise\PromisorInterface;
 
 /**
  * Represents the result of a computation that may not have completed yet.
@@ -16,8 +15,13 @@ use React\Promise\PromisorInterface;
  * computation has not yet completed when wait() is called, the call to wait()
  * will block until the future has completed.
  */
-interface FutureInterface extends PromiseInterface, PromisorInterface
+interface FutureInterface extends PromiseInterface
 {
+    /**
+     * Returns the promise that the future shadows.
+     */
+    public function promise(): PromiseInterface;
+
     /**
      * Returns the result of the future either from cache or by blocking until
      * it is complete.
@@ -36,5 +40,5 @@ interface FutureInterface extends PromiseInterface, PromisorInterface
     /**
      * Cancels the future, if possible.
      */
-    public function cancel();
+    public function cancel(): void;
 }

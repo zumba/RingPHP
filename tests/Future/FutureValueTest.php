@@ -3,10 +3,13 @@ namespace GuzzleHttp\Tests\Ring\Future;
 
 use GuzzleHttp\Ring\Exception\CancelledFutureAccessException;
 use GuzzleHttp\Ring\Future\FutureValue;
+use GuzzleHttp\Tests\Ring\CapturesUnhandledRejections;
 use React\Promise\Deferred;
 
 class FutureValueTest extends \PHPUnit\Framework\TestCase
 {
+    use CapturesUnhandledRejections;
+
     public function testDerefReturnsValue()
     {
         $called = 0;
@@ -97,5 +100,32 @@ class FutureValueTest extends \PHPUnit\Framework\TestCase
             }
         );
         $f->wait();
+    }
+
+    public function testRejectedFutureReachesItsRejectionHandlers()
+    {
+        $calls = [];
+        $reported = $this->unhandledRejections(function () use (&$calls) {
+            $deferred = new Deferred();
+            $f = new FutureValue($deferred->promise());
+            $f->then(null, function (\Exception $e) use (&$calls) {
+                $calls[] = 'onRejected ' . $e->getMessage();
+            });
+            $f->catch(function (\Exception $e) use (&$calls) {
+                $calls[] = 'catch ' . $e->getMessage();
+            });
+            $f->otherwise(function () use (&$calls) {
+                $calls[] = 'otherwise';
+            });
+            $f->always(function () use (&$calls) {
+                $calls[] = 'always';
+            })->catch(function (\Exception $e) use (&$calls) {
+                $calls[] = 'always passed on ' . $e->getMessage();
+            });
+            $deferred->reject(new \Exception('foo'));
+        });
+
+        $this->assertSame(['onRejected foo', 'catch foo', 'otherwise', 'always', 'always passed on foo'], $calls);
+        $this->assertSame([], $reported);
     }
 }

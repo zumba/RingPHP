@@ -66,20 +66,37 @@ trait BaseFutureTrait
         return $this->result;
     }
 
-    public function promise()
+    public function promise(): PromiseInterface
     {
         return $this->wrappedPromise;
     }
 
-    public function then(
-        ?callable $onFulfilled = null,
-        ?callable $onRejected = null,
-        ?callable $onProgress = null
-    ) {
-        return $this->wrappedPromise->then($onFulfilled, $onRejected, $onProgress);
+    public function then(?callable $onFulfilled = null, ?callable $onRejected = null): PromiseInterface
+    {
+        return $this->wrappedPromise->then($onFulfilled, $onRejected);
     }
 
-    public function cancel()
+    public function catch(callable $onRejected): PromiseInterface
+    {
+        return $this->wrappedPromise->catch($onRejected);
+    }
+
+    public function finally(callable $onFulfilledOrRejected): PromiseInterface
+    {
+        return $this->wrappedPromise->finally($onFulfilledOrRejected);
+    }
+
+    public function otherwise(callable $onRejected): PromiseInterface
+    {
+        return $this->catch($onRejected);
+    }
+
+    public function always(callable $onFulfilledOrRejected): PromiseInterface
+    {
+        return $this->finally($onFulfilledOrRejected);
+    }
+
+    public function cancel(): void
     {
         if (!$this->isRealized) {
             $cancelfn = $this->cancelfn;

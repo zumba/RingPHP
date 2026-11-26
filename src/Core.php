@@ -327,18 +327,16 @@ class Core
      * @param FutureArrayInterface $future      Future to wrap with a new future
      * @param callable    $onFulfilled Invoked when the future fulfilled
      * @param callable    $onRejected  Invoked when the future rejected
-     * @param callable    $onProgress  Invoked when the future progresses
      *
      * @return FutureArray
      */
     public static function proxy(
         FutureArrayInterface $future,
         ?callable $onFulfilled = null,
-        ?callable $onRejected = null,
-        ?callable $onProgress = null
+        ?callable $onRejected = null
     ) {
         return new FutureArray(
-            $future->then($onFulfilled, $onRejected, $onProgress),
+            $future->then($onFulfilled, $onRejected),
             [$future, 'wait'],
             [$future, 'cancel']
         );
