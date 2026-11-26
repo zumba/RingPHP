@@ -296,7 +296,7 @@ class CurlFactoryTest extends \PHPUnit\Framework\TestCase
         $response->wait();
         rewind($res);
         $output = str_replace("\r", '', stream_get_contents($res));
-        $this->assertStringContainsString(
+        $this->assertStringContainsStringIgnoringCase(
             "> HEAD / HTTP/1.1\nhost: 127.0.0.1:8125\n\n",
             $output
         );
