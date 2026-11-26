@@ -16,7 +16,8 @@ Next, run the unit tests using ``Make``.
 
     make test
 
-The tests are also run on Travis-CI on each commit: https://travis-ci.org/guzzle/guzzle-ring
+GitHub Actions runs the tests on PHP 8.2 and 8.5 for every pull request and every push to
+master (``.github/workflows/ci.yml``).
 
 Test Server
 -----------

@@ -403,8 +403,8 @@ class StreamHandler
                     trigger_error("URL is invalid: {$url}", E_USER_WARNING);
                     return null;
                 }
-                $resource = fopen($url, 'r', null, $context);
-                $this->lastHeaders = $http_response_header;
+                $resource = fopen($url, 'r', false, $context);
+                $this->lastHeaders = $resource ? stream_get_meta_data($resource)['wrapper_data'] : null;
                 return $resource;
             },
             $request,

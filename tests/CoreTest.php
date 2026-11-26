@@ -7,8 +7,10 @@ use GuzzleHttp\Ring\Future\FutureArray;
 use GuzzleHttp\Stream\Stream;
 use React\Promise\Deferred;
 
-class CoreTest extends \PHPUnit_Framework_TestCase
+class CoreTest extends \PHPUnit\Framework\TestCase
 {
+    use CapturesUnhandledRejections;
+
     public function testReturnsNullNoHeadersAreSet()
     {
         $this->assertNull(Core::header([], 'Foo'));
@@ -122,12 +124,10 @@ class CoreTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('http://foo.com/', Core::url($req));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage No Host header was provided
-     */
     public function testEnsuresHostIsAvailableWhenCreatingUrls()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('No Host header was provided');
         Core::url([]);
     }
 
@@ -187,11 +187,9 @@ class CoreTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('foo', Core::body(['body' => new StrClass]));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testEnsuresBodyIsValid()
     {
+        $this->expectException(\InvalidArgumentException::class);
         Core::body(['body' => false]);
     }
 
@@ -324,6 +322,55 @@ class CoreTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals('foo', $e->getMessage());
         }
 
+    }
+
+    public function testProxyPassesARejectionToOnRejected()
+    {
+        $d = new Deferred();
+        $f = Core::proxy(new FutureArray($d->promise()), null, function (\Exception $e) {
+            return ['status' => 599, 'reason' => $e->getMessage()];
+        });
+        $d->reject(new \Exception('foo'));
+        $this->assertSame(599, $f['status']);
+        $this->assertSame('foo', $f['reason']);
+    }
+
+    public function testProxyRejectionHandledLikeElasticsearchIsNotReported()
+    {
+        $calls = [];
+        $reported = $this->unhandledRejections(function () use (&$calls) {
+            $f = Core::proxy(new CompletedFutureArray(['status' => 404]), function () {
+                throw new \RuntimeException('missing', 404);
+            });
+            $f->promise()->then(function () use (&$calls) {
+                $calls[] = 'onSuccess';
+            }, function (\Exception $e) use (&$calls) {
+                $calls[] = 'onFailure ' . $e->getCode();
+            });
+            try {
+                $f->wait();
+            } catch (\RuntimeException $e) {
+                $calls[] = 'wait threw ' . $e->getMessage();
+            }
+        });
+
+        $this->assertSame(['onFailure 404', 'wait threw missing'], $calls);
+        $this->assertSame([], $reported);
+    }
+
+    public function testProxyRejectionReadThroughWaitIsNotReported()
+    {
+        $reported = $this->unhandledRejections(function () {
+            $f = Core::proxy(new CompletedFutureArray(['status' => 404]), function () {
+                throw new \RuntimeException('missing');
+            });
+            try {
+                $f['status'];
+            } catch (\RuntimeException $e) {
+            }
+        });
+
+        $this->assertSame([], $reported);
     }
 }
 

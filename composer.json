@@ -10,13 +10,13 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "php": "^8.0",
         "guzzlehttp/streams": "~3.0",
-        "react/promise": "~2.0"
+        "react/promise": "^3"
     },
     "require-dev": {
         "ext-curl": "*",
-        "phpunit/phpunit": "~4.0"
+        "phpunit/phpunit": "^9.6"
     },
     "suggest": {
         "ext-curl": "Guzzle will use specific adapters if cURL is present"

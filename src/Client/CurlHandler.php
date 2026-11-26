@@ -48,15 +48,6 @@ class CurlHandler
             : 5;
     }
 
-    public function __destruct()
-    {
-        foreach ($this->handles as $handle) {
-            if (is_resource($handle)) {
-                curl_close($handle);
-            }
-        }
-    }
-
     /**
      * @param array $request
      *
@@ -117,7 +108,6 @@ class CurlHandler
     {
         $id = (int) $handle;
         if (count($this->ownedHandles) > $this->maxHandles) {
-            curl_close($this->handles[$id]);
             unset($this->handles[$id], $this->ownedHandles[$id]);
         } else {
             // curl_reset doesn't clear these out for some reason

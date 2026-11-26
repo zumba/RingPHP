@@ -3,10 +3,13 @@ namespace GuzzleHttp\Tests\Ring\Future;
 
 use GuzzleHttp\Ring\Exception\CancelledFutureAccessException;
 use GuzzleHttp\Ring\Future\FutureValue;
+use GuzzleHttp\Tests\Ring\CapturesUnhandledRejections;
 use React\Promise\Deferred;
 
-class FutureValueTest extends \PHPUnit_Framework_TestCase
+class FutureValueTest extends \PHPUnit\Framework\TestCase
 {
+    use CapturesUnhandledRejections;
+
     public function testDerefReturnsValue()
     {
         $called = 0;
@@ -25,14 +28,12 @@ class FutureValueTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('foo', $f->wait());
         $this->assertEquals(1, $called);
         $f->cancel();
-        $this->assertTrue($this->readAttribute($f, 'isRealized'));
+        $this->assertTrue((fn () => $this->isRealized)->call($f));
     }
 
-    /**
-     * @expectedException \GuzzleHttp\Ring\Exception\CancelledFutureAccessException
-     */
     public function testThrowsWhenAccessingCancelled()
     {
+        $this->expectException(\GuzzleHttp\Ring\Exception\CancelledFutureAccessException::class);
         $f = new FutureValue(
             (new Deferred())->promise(),
             function () {},
@@ -42,11 +43,9 @@ class FutureValueTest extends \PHPUnit_Framework_TestCase
         $f->wait();
     }
 
-    /**
-     * @expectedException \OutOfBoundsException
-     */
     public function testThrowsWhenDerefFailure()
     {
+        $this->expectException(\OutOfBoundsException::class);
         $called = false;
         $deferred = new Deferred();
         $f = new FutureValue(
@@ -60,12 +59,10 @@ class FutureValueTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($called);
     }
 
-    /**
-     * @expectedException \GuzzleHttp\Ring\Exception\RingException
-     * @expectedExceptionMessage Waiting did not resolve future
-     */
     public function testThrowsWhenDerefDoesNotResolve()
     {
+        $this->expectException(\GuzzleHttp\Ring\Exception\RingException::class);
+        $this->expectExceptionMessage('Waiting did not resolve future');
         $deferred = new Deferred();
         $f = new FutureValue(
             $deferred->promise(),
@@ -91,12 +88,10 @@ class FutureValueTest extends \PHPUnit_Framework_TestCase
         } catch (CancelledFutureAccessException $e) {}
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage foo
-     */
     public function testThrowingExceptionInDerefMarksAsFailed()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('foo');
         $deferred = new Deferred();
         $f = new FutureValue(
             $deferred->promise(),
@@ -105,5 +100,32 @@ class FutureValueTest extends \PHPUnit_Framework_TestCase
             }
         );
         $f->wait();
+    }
+
+    public function testRejectedFutureReachesItsRejectionHandlers()
+    {
+        $calls = [];
+        $reported = $this->unhandledRejections(function () use (&$calls) {
+            $deferred = new Deferred();
+            $f = new FutureValue($deferred->promise());
+            $f->then(null, function (\Exception $e) use (&$calls) {
+                $calls[] = 'onRejected ' . $e->getMessage();
+            });
+            $f->catch(function (\Exception $e) use (&$calls) {
+                $calls[] = 'catch ' . $e->getMessage();
+            });
+            $f->otherwise(function () use (&$calls) {
+                $calls[] = 'otherwise';
+            });
+            $f->always(function () use (&$calls) {
+                $calls[] = 'always';
+            })->catch(function (\Exception $e) use (&$calls) {
+                $calls[] = 'always passed on ' . $e->getMessage();
+            });
+            $deferred->reject(new \Exception('foo'));
+        });
+
+        $this->assertSame(['onRejected foo', 'catch foo', 'otherwise', 'always', 'always passed on foo'], $calls);
+        $this->assertSame([], $reported);
     }
 }

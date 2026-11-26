@@ -16,6 +16,7 @@ use React\Promise\Deferred;
  *
  * @property resource $_mh Internal use only. Lazy loaded multi-handle.
  */
+#[\AllowDynamicProperties]
 class CurlMultiHandler
 {
     /** @var callable */
@@ -25,7 +26,6 @@ class CurlMultiHandler
     private $handles = [];
     private $delays = [];
     private $maxHandles;
-    private $_mh;
 
     /**
      * This handler accepts the following options:
@@ -174,7 +174,6 @@ class CurlMultiHandler
                 $this->_mh,
                 $this->handles[$id]['handle']
             );
-            curl_close($this->handles[$id]['handle']);
             unset($this->handles[$id], $this->delays[$id]);
         }
     }
@@ -196,7 +195,6 @@ class CurlMultiHandler
         $handle = $this->handles[$id]['handle'];
         unset($this->delays[$id], $this->handles[$id]);
         curl_multi_remove_handle($this->_mh, $handle);
-        curl_close($handle);
 
         return true;
     }

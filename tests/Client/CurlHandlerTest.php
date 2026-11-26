@@ -3,9 +3,9 @@ namespace GuzzleHttp\Tests\Ring\Client;
 
 use GuzzleHttp\Ring\Client\CurlHandler;
 
-class CurlHandlerTest extends \PHPUnit_Framework_TestCase
+class CurlHandlerTest extends \PHPUnit\Framework\TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         if (!function_exists('curl_reset')) {
             $this->markTestSkipped('curl_reset() is not available');
@@ -20,7 +20,7 @@ class CurlHandlerTest extends \PHPUnit_Framework_TestCase
     public function testCanSetMaxHandles()
     {
         $a = new CurlHandler(['max_handles' => 10]);
-        $this->assertEquals(10, $this->readAttribute($a, 'maxHandles'));
+        $this->assertEquals(10, (fn () => $this->maxHandles)->call($a));
     }
 
     public function testCreatesCurlErrors()
@@ -77,7 +77,7 @@ class CurlHandlerTest extends \PHPUnit_Framework_TestCase
         ];
 
         $a($request);
-        $this->assertCount(2, $this->readAttribute($a, 'handles'));
+        $this->assertCount(2, (fn () => $this->handles)->call($a));
     }
 
     public function testReusesHandles()
@@ -92,5 +92,6 @@ class CurlHandlerTest extends \PHPUnit_Framework_TestCase
         ];
         $a($request);
         $a($request);
+        $this->assertCount(1, (fn () => $this->handles)->call($a));
     }
 }
