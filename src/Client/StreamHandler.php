@@ -404,7 +404,7 @@ class StreamHandler
                     return null;
                 }
                 $resource = fopen($url, 'r', false, $context);
-                $this->lastHeaders = $http_response_header;
+                $this->lastHeaders = $resource ? stream_get_meta_data($resource)['wrapper_data'] : null;
                 return $resource;
             },
             $request,
