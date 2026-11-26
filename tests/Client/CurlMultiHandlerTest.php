@@ -2,9 +2,13 @@
 namespace GuzzleHttp\Tests\Ring\Client;
 
 use GuzzleHttp\Ring\Client\CurlMultiHandler;
+use GuzzleHttp\Ring\Exception\CancelledFutureAccessException;
+use GuzzleHttp\Tests\Ring\CapturesUnhandledRejections;
 
 class CurlMultiHandlerTest extends \PHPUnit\Framework\TestCase
 {
+    use CapturesUnhandledRejections;
+
     public function testSendsRequest()
     {
         Server::enqueue([['status' => 200]]);
@@ -177,5 +181,36 @@ class CurlMultiHandlerTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf('GuzzleHttp\Ring\Future\FutureArray', $response);
         $this->assertEquals(CURLE_COULDNT_CONNECT, $response['curl']['errno']);
         $this->assertNotEmpty($response['curl']['error']);
+    }
+
+    public function testCancelledRequestLeavesItsPromisePending()
+    {
+        Server::flush();
+        Server::enqueue([['status' => 200]]);
+        $settled = [];
+        $reported = $this->unhandledRejections(function () use (&$settled) {
+            $a = new CurlMultiHandler();
+            $response = $a([
+                'http_method' => 'GET',
+                'headers'     => ['host' => [Server::$host]],
+                'future'      => 'lazy',
+            ]);
+            $response->promise()->then(function () use (&$settled) {
+                $settled[] = 'fulfilled';
+            }, function () use (&$settled) {
+                $settled[] = 'rejected';
+            });
+            $response->cancel();
+            try {
+                $response->wait();
+                $settled[] = 'wait returned';
+            } catch (CancelledFutureAccessException $e) {
+            }
+            $a->execute();
+        });
+
+        $this->assertSame([], $settled);
+        $this->assertSame([], $reported);
+        $this->assertCount(0, Server::received());
     }
 }
