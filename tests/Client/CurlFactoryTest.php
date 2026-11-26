@@ -708,7 +708,6 @@ class CurlFactoryTest extends \PHPUnit\Framework\TestCase
     public function testCreatesConnectException()
     {
         $m = new \ReflectionMethod('GuzzleHttp\Ring\Client\CurlFactory', 'createErrorResponse');
-        $m->setAccessible(true);
         $response = $m->invoke(
             null,
             function () {},
