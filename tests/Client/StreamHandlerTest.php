@@ -53,6 +53,10 @@ class StreamHandlerTest extends \PHPUnit\Framework\TestCase
             'GuzzleHttp\Ring\Exception\RingException',
             $result['error']
         );
+        $this->assertStringNotContainsStringIgnoringCase(
+            'deprecated',
+            $result['error']->getMessage()
+        );
     }
 
     public function testEnsuresTheHttpProtocol()
